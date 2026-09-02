@@ -368,6 +368,26 @@ function fengshuiPredict(totoDraws, targetDate) {
   const sorted = Object.entries(scores).sort((a,b)=>b[1]-a[1]);
   const picks  = sorted.slice(0,6).map(e=>parseInt(e[0])).sort((a,b)=>a-b);
 
+  // Additional number: separate scoring — favours controlled element + numbers
+  // that appear frequently as additional in history, but NOT already in picks
+  const addFreq = {};
+  for (const draw of totoDraws) {
+    if (draw.additional) addFreq[draw.additional] = (addFreq[draw.additional]||0) + 1;
+  }
+  const addScores = {};
+  for (let n = 1; n <= 49; n++) {
+    if (picks.includes(n)) continue; // must be different from main picks
+    const af = addFreq[n] || 0;
+    const addFreqScore  = af / totalDraws * 120;
+    const ctrlBonus     = controlled.nums.includes(n) ? 20 : 0;  // controlled element often surfaces as additional
+    const genBonus      = generated.nums.includes(n)  ? 10 : 0;
+    const harmonic      = Math.abs(Math.sin(n * Math.PI / 11)) * 7;
+    const dueBonus      = af < (totalDraws * 0.05) ? 10 : 0;
+    addScores[n] = addFreqScore + ctrlBonus + genBonus + harmonic + dueBonus;
+  }
+  const addSorted    = Object.entries(addScores).sort((a,b)=>b[1]-a[1]);
+  const additional   = parseInt(addSorted[0][0]);
+
   // Confidence: correlation between hot numbers and dominant element
   const top15 = sorted.slice(0,15).map(e=>parseInt(e[0]));
   const domHit = top15.filter(n=>dominant.nums.includes(n)).length;
@@ -378,7 +398,7 @@ function fengshuiPredict(totoDraws, targetDate) {
   const hot  = allSorted.slice(0,12).map(e=>parseInt(e[0]));
   const cold = allSorted.slice(-12).map(e=>parseInt(e[0]));
 
-  return { picks, dominant, generated, controlled, confidence, hot, cold, freq, totalDraws };
+  return { picks, additional, dominant, generated, controlled, confidence, hot, cold, freq, totalDraws };
 }
 
 function predict4D(fourDDraws, targetDate) {
@@ -632,10 +652,14 @@ function renderFengshui(totoDraws, fourDDraws) {
 
   // TOTO prediction
   const tp = fengshuiPredict(totoDraws, totoNext);
-  document.getElementById('toto-pred-balls').innerHTML = tp.picks.map(n => {
-    const w = getWuxing(n);
-    return `<div class="ball pred" style="background:${w.color}cc" title="${w.name}">${n}</div>`;
-  }).join('');
+  const addW = getWuxing(tp.additional);
+  document.getElementById('toto-pred-balls').innerHTML =
+    tp.picks.map(n => {
+      const w = getWuxing(n);
+      return `<div class="ball pred" style="background:${w.color}cc" title="${w.name}">${n}</div>`;
+    }).join('') +
+    `<span style="color:var(--muted);font-size:13px;margin:0 4px;align-self:center">+</span>` +
+    `<div class="ball extra" style="background:${addW.color};color:#fff;border:2px solid var(--gold)" title="附加号 Additional · ${addW.name}">${tp.additional}</div>`;
 
   if (totoNext) {
     document.getElementById('toto-next-date').textContent = fmtDate(totoNext);
@@ -670,7 +694,7 @@ function renderFengshui(totoDraws, fourDDraws) {
     <p>⚡ <strong>相克元素：</strong>${tp.controlled.name} ${tp.controlled.icon} — 此期受克，能量较弱，建议回避</p>
     <p>🔥 <strong>统计热号：</strong>${hot8} （历史高频，短期内仍有优势）</p>
     <p>❄️ <strong>统计冷号：</strong>${cold8} （长期未出，理论"补偿"概率较高）</p>
-    <p>🎯 <strong>TOTO 综合推荐：</strong><strong style="color:var(--jade-lt)">${tp.picks.join(' · ')}</strong>（五行+频率+谐波综合评分最高）</p>
+    <p>🎯 <strong>TOTO 综合推荐：</strong><strong style="color:var(--jade-lt)">${tp.picks.join(' · ')}</strong> + <strong style="color:var(--gold-lt)">${tp.additional}</strong>（附加号）（五行+频率+谐波综合评分最高）</p>
     ${totoNext ? `<p>📆 <strong>预测开奖日：</strong>${fmtDate(totoNext)}，干支 ${ganzhi(totoNext)}</p>` : ''}
     ${fourdNext ? `<p>🀄 <strong>4D 开奖日：</strong>${fmtDate(fourdNext)}，推荐号码 <strong style="color:var(--gold-lt)">${fp.picks.join(' / ')}</strong></p>` : ''}`;
 }
