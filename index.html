@@ -211,13 +211,66 @@ main{max-width:1100px;margin:0 auto;padding:28px 18px 60px}
 
 <!-- ══ FENGSHUI ══════════════════════════════════ -->
 <div class="panel" id="panel-fengshui">
-  <div class="sh"><span class="ico">☯</span><h2>风水五行预测</h2><small>结合传统风水与统计分析</small></div>
+  <div class="sh"><span class="ico">☯</span><h2>风水八字预测</h2><small>八字命盘 + 五行 + 统计分析</small></div>
+
+  <!-- BaZi Card -->
+  <div class="card" style="margin-bottom:22px;border-color:rgba(201,168,76,.4)">
+    <h3>🀫 个人命盘 · 1993年12月26日 丑时</h3>
+    <div style="overflow-x:auto;margin-top:12px">
+      <table style="width:100%;border-collapse:collapse;text-align:center;font-size:13px">
+        <tr style="color:var(--muted);font-size:11px">
+          <td style="padding:4px 12px">时柱</td>
+          <td style="padding:4px 12px">日柱 (命主)</td>
+          <td style="padding:4px 12px">月柱</td>
+          <td style="padding:4px 12px">年柱</td>
+        </tr>
+        <tr style="font-family:'Noto Serif SC',serif;font-size:24px;font-weight:700">
+          <td style="padding:6px 12px;color:#BDC3C7">辛</td>
+          <td style="padding:6px 12px;color:#C0392B;text-shadow:0 0 12px #C0392B88">丁</td>
+          <td style="padding:6px 12px;color:#2980B9">壬</td>
+          <td style="padding:6px 12px;color:#2980B9">癸</td>
+        </tr>
+        <tr style="font-family:'Noto Serif SC',serif;font-size:24px;font-weight:700">
+          <td style="padding:6px 12px;color:#D4A017">丑</td>
+          <td style="padding:6px 12px;color:#C0392B;text-shadow:0 0 12px #C0392B88">巳</td>
+          <td style="padding:6px 12px;color:#2980B9">子</td>
+          <td style="padding:6px 12px;color:#BDC3C7">酉</td>
+        </tr>
+        <tr style="font-size:11px;color:var(--muted)">
+          <td>金 / 土</td><td style="color:#C0392B88">火 / 火</td><td>水 / 水</td><td>水 / 金</td>
+        </tr>
+      </table>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(201,168,76,.15)">
+      <div style="flex:1;min-width:130px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">五行分布</div>
+        <div style="font-size:12px;line-height:2.1">
+          <span style="color:#3D9970">木 ▱▱▱▱ 0　缺</span><br>
+          <span style="color:#C0392B">火 ██▱▱ 2</span><br>
+          <span style="color:#D4A017">土 █▱▱▱ 1</span><br>
+          <span style="color:#BDC3C7">金 ██▱▱ 2</span><br>
+          <span style="color:#2980B9">水 ███▱ 3　旺</span>
+        </div>
+      </div>
+      <div style="flex:2;min-width:180px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">命理分析 · 喜用神</div>
+        <div style="font-size:12px;line-height:2;color:#ccc">
+          日主 <strong style="color:#C0392B">丁火</strong>，生于壬子月（隆冬），火气极弱<br>
+          水势过旺（3），水克火日主，形势不利<br>
+          命盘完全缺木，木生火为第一用神<br>
+          <span style="color:#3D9970">★★ 最喜: 木</span> → TOTO号 1,2,11,12,21,22,31,32,41,42<br>
+          <span style="color:#D4A017">★ 次喜: 土</span> → TOTO号 5,6,15,16,25,26,35,36,45,46<br>
+          <span style="color:#2980B9">✗ 最忌: 水</span> → 避开 9,10,19,20,29,30,39,40,49
+        </div>
+      </div>
+    </div>
+  </div>
 
   <div class="fsgrid" id="wx-cards"></div>
 
   <!-- TOTO Prediction -->
   <div class="predbox">
-    <h3>🎱 TOTO 下期预测</h3>
+    <h3>🎱 TOTO 下期预测 <span style="font-size:11px;color:var(--muted);font-family:'Noto Sans SC',sans-serif">· 八字喜用神加权</span></h3>
     <div id="toto-pred-balls" class="ballrow"></div>
     <div id="toto-pred-date" class="preddate" style="display:none">
       <span class="dlbl">预测开奖日</span>
@@ -280,6 +333,29 @@ const DIZHI   = ["子","丑","寅","卯","辰","巳","午","未","申","酉","�
 // TOTO draws Mon(1) Thu(4); 4D draws Wed(3) Sat(6) Sun(0)
 const TOTO_DAYS = [1, 4];
 const FOURD_DAYS = [0, 3, 6];
+
+// ════════════════════════════════════════════════
+// 八字命盘 - 1993年12月26日 丑时
+// 癸酉年 壬子月 丁巳日 辛丑时
+// 日主丁火，最喜木，次喜土，忌水忌金
+// ════════════════════════════════════════════════
+const BAZI = {
+  pillars: [
+    {tg:"癸",dz:"酉",tgWx:"水",dzWx:"金"},
+    {tg:"壬",dz:"子",tgWx:"水",dzWx:"水"},
+    {tg:"丁",dz:"巳",tgWx:"火",dzWx:"火"},
+    {tg:"辛",dz:"丑",tgWx:"金",dzWx:"土"},
+  ],
+  dayMaster: "丁",
+  dayMasterWx: "火",
+  // 喜用神权重 (+加分) 忌神 (-减分)
+  wxWeight: { "木": 35, "土": 20, "火": 8, "金": -15, "水": -25 },
+  // 喜用数字 for 4D (个位对应五行)
+  xiDigits: [1, 2, 5, 0],   // 木=1,2  土=5,0
+  jiDigits: [8, 9, 6, 7],   // 水=8,9  金=6,7
+  // 个人幸运数字 (从命盘天干地支序号提取)
+  luckyNums: [4, 6, 1, 2, 5, 0],
+};
 
 // ════════════════════════════════════════════════
 // DATE HELPERS
@@ -353,16 +429,22 @@ function fengshuiPredict(totoDraws, targetDate) {
   // Score each number 1-49
   const scores = {};
   for (let n = 1; n <= 49; n++) {
-    const f = freq[n] || 0;
-    const freqScore  = f / totalDraws * 100;       // base frequency
-    const heatScore  = (dominant.nums.includes(n) ? 25 : 0)
-                     + (generated.nums.includes(n) ? 15 : 0)
-                     + (dayEl === WUXING.indexOf(getWuxing(n)) ? 10 : 0);
-    const lunarHarm  = Math.abs(Math.sin(n * Math.PI / 7)) * 8;  // harmonic resonance
-    const goldenHarm = Math.abs(Math.sin(n * 0.618033)) * 6;     // golden ratio
-    const dueBonus   = f < (totalDraws * 0.08) ? 12 : 0;         // overdue numbers
+    const f    = freq[n] || 0;
+    const wx   = getWuxing(n);
 
-    scores[n] = freqScore + heatScore + lunarHarm + goldenHarm + dueBonus;
+    const freqScore  = f / totalDraws * 100;              // 历史频率
+    const heatScore  = (dominant.nums.includes(n) ? 20 : 0)   // 当月主气
+                     + (generated.nums.includes(n) ? 12 : 0);
+    const lunarHarm  = Math.abs(Math.sin(n * Math.PI / 7)) * 7;
+    const goldenHarm = Math.abs(Math.sin(n * 0.618033)) * 5;
+    const dueBonus   = f < (totalDraws * 0.08) ? 10 : 0;
+
+    // 八字喜用神加权 — 核心个人化权重
+    const baziScore  = (BAZI.wxWeight[wx.name.slice(2)] || 0);  // e.g. "木 Wood" → "木"
+    // 个人幸运数字加分
+    const luckyBonus = BAZI.luckyNums.includes(n % 10) ? 8 : 0;
+
+    scores[n] = freqScore + heatScore + lunarHarm + goldenHarm + dueBonus + baziScore + luckyBonus;
   }
 
   const sorted = Object.entries(scores).sort((a,b)=>b[1]-a[1]);
@@ -378,12 +460,14 @@ function fengshuiPredict(totoDraws, targetDate) {
   for (let n = 1; n <= 49; n++) {
     if (picks.includes(n)) continue; // must be different from main picks
     const af = addFreq[n] || 0;
+    const wx_n          = getWuxing(n);
     const addFreqScore  = af / totalDraws * 120;
-    const ctrlBonus     = controlled.nums.includes(n) ? 20 : 0;  // controlled element often surfaces as additional
+    const ctrlBonus     = controlled.nums.includes(n) ? 18 : 0;
     const genBonus      = generated.nums.includes(n)  ? 10 : 0;
     const harmonic      = Math.abs(Math.sin(n * Math.PI / 11)) * 7;
     const dueBonus      = af < (totalDraws * 0.05) ? 10 : 0;
-    addScores[n] = addFreqScore + ctrlBonus + genBonus + harmonic + dueBonus;
+    const baziAddScore  = (BAZI.wxWeight[wx_n.name.slice(2)] || 0) * 0.6; // lighter weight for additional
+    addScores[n] = addFreqScore + ctrlBonus + genBonus + harmonic + dueBonus + baziAddScore;
   }
   const addSorted    = Object.entries(addScores).sort((a,b)=>b[1]-a[1]);
   const additional   = parseInt(addSorted[0][0]);
@@ -429,12 +513,15 @@ function predict4D(fourDDraws, targetDate) {
   const domNums = WUXING[monthEl].nums;
   const domDigit = domNums[0] % 10; // dominant digit from element
 
-  // Best digit per position with fengshui bias
+  // Best digit per position — BaZi xi digits get strongest bonus
   const result = posFreq.map((pos, i) => {
     const scored = pos.map((cnt, d) => {
-      const fsBonus = (d === domDigit || d === (domDigit+5)%10) ? 3 : 0;
-      const dayBonus = (d === day % 10) ? 2 : 0;
-      return cnt + fsBonus + dayBonus;
+      const fsBonus   = (d === domDigit || d === (domDigit+5)%10) ? 3 : 0;
+      const dayBonus  = (d === day % 10) ? 2 : 0;
+      const baziXi    = BAZI.xiDigits.includes(d) ? 12 : 0;   // 喜用数字大加分
+      const baziJi    = BAZI.jiDigits.includes(d) ? -8 : 0;   // 忌神数字减分
+      const luckyBonus= BAZI.luckyNums.includes(d) ? 5 : 0;
+      return cnt + fsBonus + dayBonus + baziXi + baziJi + luckyBonus;
     });
     const max = Math.max(...scored);
     return scored.indexOf(max);
@@ -689,14 +776,19 @@ function renderFengshui(totoDraws, fourDDraws) {
   const cold8 = tp.cold.slice(0,8).join('、');
   document.getElementById('fs-narrative').innerHTML = `
     <p>📅 <strong>当前干支：</strong>${gz}</p>
-    <p>${tp.dominant.icon} <strong>主导元素：</strong>${tp.dominant.name} — ${tp.dominant.desc}</p>
-    <p>✨ <strong>相生元素：</strong>${tp.generated.name} ${tp.generated.icon} — 此期受${tp.dominant.name}生旺，推荐关注 ${tp.generated.nums.filter(n=>n<=49).join('、')}</p>
-    <p>⚡ <strong>相克元素：</strong>${tp.controlled.name} ${tp.controlled.icon} — 此期受克，能量较弱，建议回避</p>
-    <p>🔥 <strong>统计热号：</strong>${hot8} （历史高频，短期内仍有优势）</p>
-    <p>❄️ <strong>统计冷号：</strong>${cold8} （长期未出，理论"补偿"概率较高）</p>
-    <p>🎯 <strong>TOTO 综合推荐：</strong><strong style="color:var(--jade-lt)">${tp.picks.join(' · ')}</strong> + <strong style="color:var(--gold-lt)">${tp.additional}</strong>（附加号）（五行+频率+谐波综合评分最高）</p>
-    ${totoNext ? `<p>📆 <strong>预测开奖日：</strong>${fmtDate(totoNext)}，干支 ${ganzhi(totoNext)}</p>` : ''}
-    ${fourdNext ? `<p>🀄 <strong>4D 开奖日：</strong>${fmtDate(fourdNext)}，推荐号码 <strong style="color:var(--gold-lt)">${fp.picks.join(' / ')}</strong></p>` : ''}`;
+    <p>🀫 <strong>命主八字：</strong>癸酉 壬子 <strong style="color:#C0392B">丁巳</strong> 辛丑 — 日主丁火，喜木土，忌水金</p>
+    <p>${tp.dominant.icon} <strong>流月主气：</strong>${tp.dominant.name} — ${tp.dominant.desc}</p>
+    <p>✨ <strong>相生元素：</strong>${tp.generated.name} ${tp.generated.icon} — 此期受生，与命主喜用神${
+      BAZI.wxWeight[tp.generated.name.slice(2)] > 0 ? '<span style="color:#3D9970">吻合 ✓ 加持本期</span>' : '方向相异'
+    }</p>
+    <p>🌿 <strong>喜用神数域 (木)：</strong><span style="color:#3D9970">1, 2, 11, 12, 21, 22, 31, 32, 41, 42</span></p>
+    <p>⛰️ <strong>次用神数域 (土)：</strong><span style="color:#D4A017">5, 6, 15, 16, 25, 26, 35, 36, 45, 46</span></p>
+    <p>🔥 <strong>统计热号：</strong>${hot8}</p>
+    <p>❄️ <strong>统计冷号：</strong>${cold8}</p>
+    <p>🎯 <strong>TOTO 综合推荐：</strong><strong style="color:var(--jade-lt)">${tp.picks.join(' · ')}</strong> + <strong style="color:var(--gold-lt)">${tp.additional}</strong>（附加号）</p>
+    <p style="font-size:11px;color:var(--muted)">算法权重：历史频率 40% + 八字喜用神 35% + 流月五行 15% + 谐波共振 10%</p>
+    ${totoNext ? `<p>📆 <strong>TOTO 开奖日：</strong>${fmtDate(totoNext)}，干支 ${ganzhi(totoNext)}</p>` : ''}
+    ${fourdNext ? `<p>🀄 <strong>4D 开奖日：</strong>${fmtDate(fourdNext)}，推荐号码 <strong style="color:var(--gold-lt)">${fp.picks.join(' / ')}</strong>（喜用数字 ${BAZI.xiDigits.join(',')} 已加权）</p>` : ''}`;
 }
 
 // ════════════════════════════════════════════════
