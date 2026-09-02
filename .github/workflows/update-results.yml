@@ -1,0 +1,46 @@
+name: Update Lottery Results
+
+on:
+  schedule:
+    # TOTO draws: Monday & Thursday nights (SGT = UTC+8)
+    # Run at 22:30 UTC Mon/Thu = 06:30 SGT Tue/Fri
+    - cron: "30 22 * * 1,4"
+    # 4D draws: Wed, Sat, Sun — run at 22:30 UTC those days
+    - cron: "30 22 * * 3,6,0"
+    # Also run daily at 10:00 UTC as safety net
+    - cron: "0 10 * * *"
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4 lxml
+
+      - name: Run scraper
+        run: python scraper.py
+
+      - name: Commit and push if data changed
+        run: |
+          git config --global user.name "lottery-bot"
+          git config --global user.email "lottery-bot@github-actions"
+          git add data/results.json
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "🎰 Auto-update lottery results [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+            git push
+          fi
