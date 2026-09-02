@@ -2,14 +2,10 @@ name: Update Lottery Results
 
 on:
   schedule:
-    # TOTO draws: Monday & Thursday nights (SGT = UTC+8)
-    # Run at 22:30 UTC Mon/Thu = 06:30 SGT Tue/Fri
     - cron: "30 22 * * 1,4"
-    # 4D draws: Wed, Sat, Sun — run at 22:30 UTC those days
     - cron: "30 22 * * 3,6,0"
-    # Also run daily at 10:00 UTC as safety net
     - cron: "0 10 * * *"
-  workflow_dispatch: # Allow manual trigger
+  workflow_dispatch:
 
 jobs:
   update:
@@ -27,11 +23,21 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
+        run: pip install requests beautifulsoup4
+
+      - name: Test network access
         run: |
-          pip install requests beautifulsoup4 lxml
+          echo "=== Testing check4d.org ==="
+          curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" "https://www.check4d.org/singapore-4d-results/"
+          echo "=== First 500 chars of page ==="
+          curl -s -A "Mozilla/5.0 Chrome/124" "https://www.check4d.org/singapore-4d-results/" | head -c 500
 
       - name: Run scraper
-        run: python scraper.py
+        run: |
+          echo "=== Running scraper ==="
+          python scraper.py
+          echo "=== results.json content ==="
+          cat data/results.json
 
       - name: Commit and push if data changed
         run: |
