@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>新加坡彩票风水分析 · Singapore Lottery Fengshui</title>
+<title>好玩分析 · Fun Analysis</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -135,39 +135,34 @@ main{max-width:1100px;margin:0 auto;padding:28px 18px 60px}
 <header>
   <div class="hinner">
     <div class="tagua">☰ ☱ ☲ ☳ ☴ ☵ ☶ ☷</div>
-    <h1>新加坡彩票风水分析
-      <span>Singapore Lottery · Fengshui Analysis</span>
+    <h1>好玩分析
+      <span>Fun Analysis · 娱乐参考</span>
     </h1>
-    <p class="upd"><span id="dot"></span>上次更新 Last updated: <span id="upd-time">Loading…</span></p>
+    <p class="upd"><span id="dot"></span>上次更新: <span id="upd-time">Loading…</span></p>
   </div>
 </header>
 
 <div class="tab-bar">
-  <div class="tab active" onclick="switchTab('toto')">🎱 TOTO 多多</div>
-  <div class="tab" onclick="switchTab('4d')">🀄 4D 万字</div>
-  <div class="tab" onclick="switchTab('analysis')">📊 统计分析</div>
-  <div class="tab" onclick="switchTab('fengshui')">☯ 风水预测</div>
+  <div class="tab active" onclick="switchTab('fengshui')">☯ 娱乐分析</div>
 </div>
 
 <main>
 
-<!-- ══ TOTO ══════════════════════════════════════ -->
-<div class="panel active" id="panel-toto">
-  <div class="sh"><span class="ico">🎱</span><h2>TOTO 最新开奖</h2><small>周一、四 6:30pm</small></div>
+<!-- ══ TOTO (hidden) ══════════════════════════════ -->
+<div class="panel" id="panel-toto" style="display:none">
   <div id="toto-stats" class="statrow"></div>
-  <div id="toto-list" class="dlist"><p style="color:var(--muted)">加载中…</p></div>
+  <div id="toto-list" class="dlist"></div>
   <div class="pgbar" id="toto-pg"></div>
 </div>
 
-<!-- ══ 4D ════════════════════════════════════════ -->
-<div class="panel" id="panel-4d">
-  <div class="sh"><span class="ico">🀄</span><h2>4D 最新开奖</h2><small>周三、六、日 6:30pm</small></div>
-  <div id="fourd-list"><p style="color:var(--muted)">加载中…</p></div>
+<!-- ══ 4D (hidden) ═══════════════════════════════ -->
+<div class="panel" id="panel-4d" style="display:none">
+  <div id="fourd-list"></div>
   <div class="pgbar" id="fourd-pg"></div>
 </div>
 
-<!-- ══ ANALYSIS ══════════════════════════════════ -->
-<div class="panel" id="panel-analysis">
+<!-- ══ ANALYSIS (hidden) ══════════════════════════ -->
+<div class="panel" id="panel-analysis" style="display:none">
   <div class="sh"><span class="ico">📊</span><h2>统计分析</h2><small>基于历史数据</small></div>
   <div class="subtab-bar">
     <div class="stab active" onclick="switchStab('toto')">🎱 TOTO 分析</div>
@@ -210,12 +205,12 @@ main{max-width:1100px;margin:0 auto;padding:28px 18px 60px}
 </div>
 
 <!-- ══ FENGSHUI ══════════════════════════════════ -->
-<div class="panel" id="panel-fengshui">
-  <div class="sh"><span class="ico">☯</span><h2>风水八字预测</h2><small>八字命盘 + 五行 + 统计分析</small></div>
+<div class="panel active" id="panel-fengshui">
+  <div class="sh"><span class="ico">☯</span><h2>娱乐运势分析</h2><small>⚠️ 纯属娱乐 · For Entertainment Only</small></div>
 
   <!-- BaZi Card -->
   <div class="card" style="margin-bottom:22px;border-color:rgba(201,168,76,.4)">
-    <h3>🀫 个人命盘 · 1993年12月26日 丑时</h3>
+    <h3>🀫 命理参考 · 娱乐用途</h3>
     <div style="overflow-x:auto;margin-top:12px">
       <table style="width:100%;border-collapse:collapse;text-align:center;font-size:13px">
         <tr style="color:var(--muted);font-size:11px">
@@ -258,9 +253,9 @@ main{max-width:1100px;margin:0 auto;padding:28px 18px 60px}
           日主 <strong style="color:#C0392B">丁火</strong>，生于壬子月（隆冬），火气极弱<br>
           水势过旺（3），水克火日主，形势不利<br>
           命盘完全缺木，木生火为第一用神<br>
-          <span style="color:#3D9970">★★ 最喜: 木</span> → TOTO号 1,2,11,12,21,22,31,32,41,42<br>
-          <span style="color:#D4A017">★ 次喜: 土</span> → TOTO号 5,6,15,16,25,26,35,36,45,46<br>
-          <span style="color:#2980B9">✗ 最忌: 水</span> → 避开 9,10,19,20,29,30,39,40,49
+          <span style="color:#3D9970">★★ 最喜: 木</span>（生扶日主，能量最强）<br>
+          <span style="color:#D4A017">★ 次喜: 土</span>（泄水护火，平衡命局）<br>
+          <span style="color:#2980B9">✗ 最忌: 水</span>（水克火，消耗日主）
         </div>
       </div>
     </div>
@@ -270,7 +265,7 @@ main{max-width:1100px;margin:0 auto;padding:28px 18px 60px}
 
   <!-- TOTO Prediction -->
   <div class="predbox">
-    <h3>🎱 TOTO 下期预测 <span style="font-size:11px;color:var(--muted);font-family:'Noto Sans SC',sans-serif">· 八字喜用神加权</span></h3>
+    <h3>🎱 本期能量参考号 <span style="font-size:11px;color:var(--muted);font-family:'Noto Sans SC',sans-serif">· 娱乐用途，请勿当真</span></h3>
     <div id="toto-pred-balls" class="ballrow"></div>
     <div id="toto-pred-date" class="preddate" style="display:none">
       <span class="dlbl">预测开奖日</span>
@@ -286,7 +281,7 @@ main{max-width:1100px;margin:0 auto;padding:28px 18px 60px}
 
   <!-- 4D Prediction -->
   <div class="predbox">
-    <h3>🀄 4D 下期推荐号码</h3>
+    <h3>🀄 本期能量参考号 <span style="font-size:11px;color:var(--muted);font-family:'Noto Sans SC',sans-serif">· 娱乐用途，请勿当真</span></h3>
     <div id="fourd-pred-nums" class="ballrow"></div>
     <div id="fourd-pred-date" class="preddate" style="display:none">
       <span class="dlbl">预测开奖日</span>
@@ -302,13 +297,13 @@ main{max-width:1100px;margin:0 auto;padding:28px 18px 60px}
 
   <!-- Analysis narrative -->
   <div class="card" style="margin-bottom:20px">
-    <h3>☯ 本期五行详解</h3>
+    <h3>☯ 本期能量场分析 · 娱乐参考</h3>
     <div id="fs-narrative" style="font-size:13px;line-height:2;margin-top:8px;color:#ccc"></div>
   </div>
 
   <div class="disc">
-    ⚠️ <strong>免责声明：</strong>风水预测纯属娱乐，不构成任何投注建议。彩票属随机事件，任何预测均无法保证准确性。请理性购彩。<br>
-    Predictions are for entertainment only. Lottery draws are random; no prediction guarantees accuracy. Please gamble responsibly.
+    ⚠️ <strong>重要声明：</strong>本页面所有内容（包括命盘分析、能量参考号、运势分析）均为<strong>纯娱乐性质</strong>，基于传统命理学作为文化参考，与实际彩票结果无任何关联，不构成任何投注建议。彩票属完全随机事件，请理性购彩，量力而行。<br><br>
+    <strong>Important:</strong> All content on this page is for <strong>entertainment purposes only</strong>. Numbers shown are culturally derived references and have no connection to actual lottery outcomes. Please gamble responsibly.
   </div>
 </div>
 
@@ -781,27 +776,24 @@ function renderFengshui(totoDraws, fourDDraws) {
     <p>✨ <strong>相生元素：</strong>${tp.generated.name} ${tp.generated.icon} — 此期受生，与命主喜用神${
       BAZI.wxWeight[tp.generated.name.slice(2)] > 0 ? '<span style="color:#3D9970">吻合 ✓ 加持本期</span>' : '方向相异'
     }</p>
-    <p>🌿 <strong>喜用神数域 (木)：</strong><span style="color:#3D9970">1, 2, 11, 12, 21, 22, 31, 32, 41, 42</span></p>
-    <p>⛰️ <strong>次用神数域 (土)：</strong><span style="color:#D4A017">5, 6, 15, 16, 25, 26, 35, 36, 45, 46</span></p>
+    <p>🌿 <strong>喜用神：</strong><span style="color:#3D9970">木（生旺）</span> · <span style="color:#D4A017">土（平衡）</span> — 本期能量场与命主相合</p>
     <p>🔥 <strong>统计热号：</strong>${hot8}</p>
     <p>❄️ <strong>统计冷号：</strong>${cold8}</p>
     <p>🎯 <strong>TOTO 综合推荐：</strong><strong style="color:var(--jade-lt)">${tp.picks.join(' · ')}</strong> + <strong style="color:var(--gold-lt)">${tp.additional}</strong>（附加号）</p>
-    <p style="font-size:11px;color:var(--muted)">算法权重：历史频率 40% + 八字喜用神 35% + 流月五行 15% + 谐波共振 10%</p>
+    <p style="font-size:11px;color:var(--muted)">⚠️ 以上纯属娱乐参考，不构成任何投注建议</p>
     ${totoNext ? `<p>📆 <strong>TOTO 开奖日：</strong>${fmtDate(totoNext)}，干支 ${ganzhi(totoNext)}</p>` : ''}
-    ${fourdNext ? `<p>🀄 <strong>4D 开奖日：</strong>${fmtDate(fourdNext)}，推荐号码 <strong style="color:var(--gold-lt)">${fp.picks.join(' / ')}</strong>（喜用数字 ${BAZI.xiDigits.join(',')} 已加权）</p>` : ''}`;
+    ${fourdNext ? `<p>🀄 <strong>4D 开奖日：</strong>${fmtDate(fourdNext)}</p>` : ''}`;
 }
 
 // ════════════════════════════════════════════════
 // TAB SWITCHING
 // ════════════════════════════════════════════════
-const TABS  = ['toto','4d','analysis','fengshui'];
+const TABS  = ['fengshui'];
 const STABS = ['toto','4d'];
 
 function switchTab(id) {
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('panel-'+id).classList.add('active');
-  document.querySelectorAll('.tab')[TABS.indexOf(id)].classList.add('active');
+  document.querySelectorAll('.tab')[0].classList.add('active');
 }
 
 function switchStab(id) {
