@@ -1,241 +1,181 @@
 #!/usr/bin/env python3
 """
-Singapore Pools Lottery Scraper
-Uses official static HTML files from Singapore Pools - no login, no block.
-
-URLs:
-  TOTO: https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/toto_result_top_draws_en.html
-  4D:   https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/fourd_result_top_draws_en.html
+Singapore Lottery Scraper
+Source: check4d.org/singapore-4d-results/
+- No anti-bot blocking on GitHub Actions
+- Parses both 4D and TOTO from one page
+- Merges with existing history (keeps latest 30 draws)
 """
 
-import json
-import re
-import os
-from datetime import datetime
-import urllib.request
+import json, re, os, urllib.request
+from datetime import datetime, timezone
+from html.parser import HTMLParser
 
-TOTO_URL = "https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/toto_result_top_draws_en.html"
-FOURD_URL = "https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/fourd_result_top_draws_en.html"
+SOURCE_URL = "https://www.check4d.org/singapore-4d-results/"
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+    "Connection": "keep-alive",
 }
-
 
 def fetch_html(url):
     req = urllib.request.Request(url, headers=HEADERS)
-    with urllib.request.urlopen(req, timeout=15) as resp:
-        return resp.read().decode("utf-8")
+    with urllib.request.urlopen(req, timeout=20) as r:
+        return r.read().decode("utf-8")
 
 
-def parse_toto(html):
-    """
-    Each draw block looks like:
-      <td>Mon, 31 Aug 2026</td>  <td>Draw No. 4213</td>
-      numbers in a row of <td> cells
-      Additional Number in next row
-    """
-    from html.parser import HTMLParser
+class TableParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.cells = []
+        self._in = False
+        self._buf = ""
 
-    class TotoParser(HTMLParser):
-        def __init__(self):
-            super().__init__()
-            self.draws = []
-            self.current = {}
-            self.td_texts = []
-            self.in_td = False
-            self.capture = False
+    def handle_starttag(self, tag, attrs):
+        if tag in ("td", "th"):
+            self._in = True
+            self._buf = ""
 
-        def handle_starttag(self, tag, attrs):
-            if tag == "td":
-                self.in_td = True
-                self.buf = ""
+    def handle_endtag(self, tag):
+        if tag in ("td", "th"):
+            self._in = False
+            t = self._buf.strip()
+            if t:
+                self.cells.append(t)
 
-        def handle_endtag(self, tag):
-            if tag == "td":
-                self.in_td = False
-                text = self.buf.strip()
-                if text:
-                    self.td_texts.append(text)
+    def handle_data(self, data):
+        if self._in:
+            self._buf += data
 
-        def handle_data(self, data):
-            if self.in_td:
-                self.buf += data
 
-    p = TotoParser()
+def parse_page(html):
+    p = TableParser()
     p.feed(html)
-    texts = p.td_texts
+    cells = p.cells
 
-    draws = []
+    fourd_draws = []
+    toto_draws  = []
+    mode = None
     i = 0
-    while i < len(texts):
-        # Look for date pattern like "Mon, 31 Aug 2026"
-        date_match = re.match(r"\w+,\s+\d+ \w+ \d{4}", texts[i])
-        draw_match = re.match(r"Draw No\.\s+(\d+)", texts[i]) if i + 1 < len(texts) else None
+    n = len(cells)
 
-        if date_match and i + 1 < len(texts) and re.match(r"Draw No\.\s+\d+", texts[i + 1]):
-            draw_date = texts[i]
-            draw_num = re.search(r"\d+", texts[i + 1]).group()
-            i += 2
+    while i < n:
+        t = cells[i]
 
-            # Collect numbers: up to 6 main + 1 additional
-            nums = []
-            while i < len(texts) and re.match(r"^\d{1,2}$", texts[i]) and len(nums) < 7:
-                nums.append(int(texts[i]))
-                i += 1
+        # Section markers
+        if re.search(r"Singapore 4D", t, re.I):
+            mode = "4d"; i += 1; continue
+        if re.search(r"Singapore Toto", t, re.I):
+            mode = "toto"; i += 1; continue
 
-            if len(nums) >= 6:
-                draws.append({
-                    "draw": draw_num,
-                    "date": draw_date,
-                    "numbers": sorted(nums[:6]),
-                    "additional": nums[6] if len(nums) >= 7 else None
-                })
-        else:
-            i += 1
+        # Draw header: "Date: DD-MM-YYYY (Day)" + "Draw No: NNNN"
+        date_m = re.match(r"Date:\s*(\d{2}-\d{2}-\d{4})", t)
+        if date_m and i+1 < n:
+            draw_m = re.match(r"Draw No:\s*(\d+)", cells[i+1])
+            if draw_m:
+                date_str = date_m.group(1)   # "30-08-2026"
+                draw_no  = draw_m.group(1)
+                i += 2
 
-    return draws
+                if mode == "4d":
+                    entry = {
+                        "draw": draw_no, "date": date_str,
+                        "first": [], "second": [], "third": [],
+                        "starter": [], "consolation": []
+                    }
+                    while i < n:
+                        c = cells[i]
+                        if re.search(r"1st Prize|首獎", c, re.I) and i+1 < n and re.match(r"^\d{4}$", cells[i+1]):
+                            entry["first"] = [cells[i+1]]; i += 2; continue
+                        elif re.search(r"2nd Prize|二獎", c, re.I) and i+1 < n and re.match(r"^\d{4}$", cells[i+1]):
+                            entry["second"] = [cells[i+1]]; i += 2; continue
+                        elif re.search(r"3rd Prize|三獎", c, re.I) and i+1 < n and re.match(r"^\d{4}$", cells[i+1]):
+                            entry["third"] = [cells[i+1]]; i += 2; continue
+                        elif re.match(r"^\d{4}$", c):
+                            if len(entry["starter"]) < 10: entry["starter"].append(c)
+                            elif len(entry["consolation"]) < 10: entry["consolation"].append(c)
+                            i += 1; continue
+                        elif re.match(r"Date:|Singapore", c, re.I): break
+                        i += 1
+                    if entry["first"]:
+                        fourd_draws.append(entry)
+
+                elif mode == "toto":
+                    nums = []; additional = None; found_plus = False
+                    while i < n:
+                        c = cells[i]
+                        if c == "+": found_plus = True; i += 1; continue
+                        if re.match(r"^\d{1,2}$", c):
+                            if found_plus: additional = int(c); i += 1; break
+                            else: nums.append(int(c)); i += 1
+                        elif re.match(r"Prize Group|Group \d|Date:|Singapore", c, re.I): break
+                        else: i += 1; continue
+                    if len(nums) >= 6:
+                        toto_draws.append({
+                            "draw": draw_no, "date": date_str,
+                            "numbers": sorted(nums[:6]),
+                            "additional": additional
+                        })
+                continue
+        i += 1
+
+    return toto_draws, fourd_draws
 
 
-def parse_4d(html):
-    """
-    Each draw block:
-      <td>Sun, 30 Aug 2026</td>  Draw No. 5529
-      1st Prize  9238
-      2nd Prize  8594
-      3rd Prize  0379
-      Starter Prizes: 10 numbers
-      Consolation Prizes: 10 numbers
-    """
-    from html.parser import HTMLParser
-
-    class FourDParser(HTMLParser):
-        def __init__(self):
-            super().__init__()
-            self.td_texts = []
-            self.in_td = False
-            self.buf = ""
-
-        def handle_starttag(self, tag, attrs):
-            if tag == "td":
-                self.in_td = True
-                self.buf = ""
-
-        def handle_endtag(self, tag):
-            if tag == "td":
-                self.in_td = False
-                text = self.buf.strip()
-                if text:
-                    self.td_texts.append(text)
-
-        def handle_data(self, data):
-            if self.in_td:
-                self.buf += data
-
-    p = FourDParser()
-    p.feed(html)
-    texts = p.td_texts
-
-    draws = []
-    i = 0
-    while i < len(texts):
-        date_match = re.match(r"\w+,\s+\d+ \w+ \d{4}", texts[i])
-        if date_match and i + 1 < len(texts) and re.match(r"Draw No\.\s+\d+", texts[i + 1]):
-            draw_date = texts[i]
-            draw_num = re.search(r"\d+", texts[i + 1]).group()
-            i += 2
-
-            entry = {
-                "draw": draw_num,
-                "date": draw_date,
-                "first": [],
-                "second": [],
-                "third": [],
-                "starter": [],
-                "consolation": []
-            }
-
-            # Parse prizes
-            j = i
-            while j < len(texts) and j < i + 50:
-                t = texts[j]
-                if t in ("1st Prize", "1St Prize"):
-                    if j + 1 < len(texts) and re.match(r"^\d{4}$", texts[j + 1]):
-                        entry["first"] = [texts[j + 1]]
-                        j += 2
-                        continue
-                elif t in ("2nd Prize", "2Nd Prize"):
-                    if j + 1 < len(texts) and re.match(r"^\d{4}$", texts[j + 1]):
-                        entry["second"] = [texts[j + 1]]
-                        j += 2
-                        continue
-                elif t in ("3rd Prize", "3Rd Prize"):
-                    if j + 1 < len(texts) and re.match(r"^\d{4}$", texts[j + 1]):
-                        entry["third"] = [texts[j + 1]]
-                        j += 2
-                        continue
-                elif re.match(r"^\d{4}$", t):
-                    # Determine which category based on count
-                    if len(entry["starter"]) < 10:
-                        entry["starter"].append(t)
-                    elif len(entry["consolation"]) < 10:
-                        entry["consolation"].append(t)
-                    j += 1
-                    continue
-                # If we hit a new date, stop
-                elif re.match(r"\w+,\s+\d+ \w+ \d{4}", t):
-                    break
-                j += 1
-
-            i = j
-            if entry["first"]:
-                draws.append(entry)
-        else:
-            i += 1
-
-    return draws
+def merge(new_list, old_list, keep=30):
+    new_draws = {d["draw"] for d in new_list}
+    combined  = new_list + [d for d in old_list if d["draw"] not in new_draws]
+    return combined[:keep]
 
 
 def main():
-    print("Fetching TOTO results...")
+    print(f"Fetching {SOURCE_URL} ...")
+
     toto_draws = []
-    try:
-        html = fetch_html(TOTO_URL)
-        toto_draws = parse_toto(html)
-        print(f"  Got {len(toto_draws)} TOTO draws")
-        if toto_draws:
-            print(f"  Latest: Draw {toto_draws[0]['draw']} on {toto_draws[0]['date']}")
-    except Exception as e:
-        print(f"  TOTO error: {e}")
-
-    print("Fetching 4D results...")
     fourd_draws = []
-    try:
-        html = fetch_html(FOURD_URL)
-        fourd_draws = parse_4d(html)
-        print(f"  Got {len(fourd_draws)} 4D draws")
-        if fourd_draws:
-            print(f"  Latest: Draw {fourd_draws[0]['draw']} on {fourd_draws[0]['date']}")
-    except Exception as e:
-        print(f"  4D error: {e}")
 
-    # Warn if data looks wrong
-    if not toto_draws:
-        print("WARNING: No TOTO data, Singapore Pools HTML structure may have changed!")
-    if not fourd_draws:
-        print("WARNING: No 4D data, Singapore Pools HTML structure may have changed!")
+    try:
+        html = fetch_html(SOURCE_URL)
+        toto_draws, fourd_draws = parse_page(html)
+        print(f"  Parsed: {len(toto_draws)} TOTO draw(s), {len(fourd_draws)} 4D draw(s)")
+        if toto_draws:
+            t = toto_draws[0]
+            print(f"  Latest TOTO → Draw {t['draw']} | {t['date']} | {t['numbers']} + {t['additional']}")
+        if fourd_draws:
+            f = fourd_draws[0]
+            print(f"  Latest 4D   → Draw {f['draw']} | {f['date']} | 1st={f['first']}")
+    except Exception as e:
+        print(f"  Fetch/parse error: {e}")
+
+    if not toto_draws and not fourd_draws:
+        print("WARNING: Nothing parsed — page structure may have changed.")
+
+    # Load existing history
+    existing = {"toto": [], "four_d": []}
+    if os.path.exists("data/results.json"):
+        try:
+            with open("data/results.json") as f:
+                existing = json.load(f)
+        except Exception:
+            pass
+
+    merged_toto  = merge(toto_draws,  existing.get("toto",   []))
+    merged_fourd = merge(fourd_draws, existing.get("four_d", []))
 
     data = {
-        "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
-        "toto": toto_draws,
-        "four_d": fourd_draws
+        "last_updated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
+        "source": "check4d.org",
+        "toto":   merged_toto,
+        "four_d": merged_fourd
     }
 
     os.makedirs("data", exist_ok=True)
     with open("data/results.json", "w") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
-    print(f"\nSaved to data/results.json")
+    print(f"\nSaved → {len(merged_toto)} TOTO + {len(merged_fourd)} 4D draws in data/results.json")
 
 
 if __name__ == "__main__":
