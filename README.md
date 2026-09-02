@@ -12,7 +12,7 @@ Settings → Pages → Branch: main → Save
 
 数据通过 GitHub Actions 自动更新，无需手动操作。
 
-如需手动触发：Actions → Update Lottery Results → Run workflow
+如需手动触发：Actions → Update Results → Run workflow
 
 📁 文件结构
 ├── index.html         # 主网站
