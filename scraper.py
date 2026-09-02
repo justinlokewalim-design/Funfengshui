@@ -1,10 +1,6 @@
 #!/usr/bin/env python3
 """
-Singapore Lottery Scraper
-Source: check4d.org/singapore-4d-results/
-- No anti-bot blocking on GitHub Actions
-- Parses both 4D and TOTO from one page
-- Merges with existing history (keeps latest 30 draws)
+Singapore Lottery Scraper — source: check4d.org
 """
 
 import json, re, os, urllib.request
@@ -25,36 +21,26 @@ def fetch_html(url):
     with urllib.request.urlopen(req, timeout=20) as r:
         return r.read().decode("utf-8")
 
-
 class TableParser(HTMLParser):
     def __init__(self):
         super().__init__()
         self.cells = []
         self._in = False
         self._buf = ""
-
     def handle_starttag(self, tag, attrs):
-        if tag in ("td", "th"):
-            self._in = True
-            self._buf = ""
-
+        if tag in ("td","th"): self._in = True; self._buf = ""
     def handle_endtag(self, tag):
-        if tag in ("td", "th"):
+        if tag in ("td","th"):
             self._in = False
             t = self._buf.strip()
-            if t:
-                self.cells.append(t)
-
+            if t: self.cells.append(t)
     def handle_data(self, data):
-        if self._in:
-            self._buf += data
-
+        if self._in: self._buf += data
 
 def parse_page(html):
     p = TableParser()
     p.feed(html)
     cells = p.cells
-
     fourd_draws = []
     toto_draws  = []
     mode = None
@@ -63,83 +49,75 @@ def parse_page(html):
 
     while i < n:
         t = cells[i]
-
-        # Section markers
         if re.search(r"Singapore 4D", t, re.I):
             mode = "4d"; i += 1; continue
         if re.search(r"Singapore Toto", t, re.I):
             mode = "toto"; i += 1; continue
 
-        # Draw header: "Date: DD-MM-YYYY (Day)" + "Draw No: NNNN"
         date_m = re.match(r"Date:\s*(\d{2}-\d{2}-\d{4})", t)
         if date_m and i+1 < n:
             draw_m = re.match(r"Draw No:\s*(\d+)", cells[i+1])
             if draw_m:
-                date_str = date_m.group(1)   # "30-08-2026"
+                date_str = date_m.group(1)
                 draw_no  = draw_m.group(1)
                 i += 2
 
                 if mode == "4d":
-                    entry = {
-                        "draw": draw_no, "date": date_str,
-                        "first": [], "second": [], "third": [],
-                        "starter": [], "consolation": []
-                    }
+                    entry = {"draw":draw_no,"date":date_str,"first":[],"second":[],"third":[],"starter":[],"consolation":[]}
                     while i < n:
                         c = cells[i]
-                        if re.search(r"1st Prize|首獎", c, re.I) and i+1 < n and re.match(r"^\d{4}$", cells[i+1]):
-                            entry["first"] = [cells[i+1]]; i += 2; continue
-                        elif re.search(r"2nd Prize|二獎", c, re.I) and i+1 < n and re.match(r"^\d{4}$", cells[i+1]):
-                            entry["second"] = [cells[i+1]]; i += 2; continue
-                        elif re.search(r"3rd Prize|三獎", c, re.I) and i+1 < n and re.match(r"^\d{4}$", cells[i+1]):
-                            entry["third"] = [cells[i+1]]; i += 2; continue
+                        if re.search(r"1st Prize|首獎", c, re.I) and i+1<n and re.match(r"^\d{4}$",cells[i+1]):
+                            entry["first"]=[cells[i+1]]; i+=2; continue
+                        elif re.search(r"2nd Prize|二獎", c, re.I) and i+1<n and re.match(r"^\d{4}$",cells[i+1]):
+                            entry["second"]=[cells[i+1]]; i+=2; continue
+                        elif re.search(r"3rd Prize|三獎", c, re.I) and i+1<n and re.match(r"^\d{4}$",cells[i+1]):
+                            entry["third"]=[cells[i+1]]; i+=2; continue
                         elif re.match(r"^\d{4}$", c):
-                            if len(entry["starter"]) < 10: entry["starter"].append(c)
-                            elif len(entry["consolation"]) < 10: entry["consolation"].append(c)
-                            i += 1; continue
+                            if len(entry["starter"])<10: entry["starter"].append(c)
+                            elif len(entry["consolation"])<10: entry["consolation"].append(c)
+                            i+=1; continue
                         elif re.match(r"Date:|Singapore", c, re.I): break
-                        i += 1
-                    if entry["first"]:
-                        fourd_draws.append(entry)
+                        i+=1
+                    if entry["first"]: fourd_draws.append(entry)
 
                 elif mode == "toto":
-                    nums = []; additional = None; found_plus = False
+                    nums=[]; additional=None; found_plus=False
                     while i < n:
                         c = cells[i]
-                        if c == "+": found_plus = True; i += 1; continue
+                        if c == "+": found_plus=True; i+=1; continue
                         if re.match(r"^\d{1,2}$", c):
-                            if found_plus: additional = int(c); i += 1; break
-                            else: nums.append(int(c)); i += 1
+                            if found_plus: additional=int(c); i+=1; break
+                            else: nums.append(int(c)); i+=1
                         elif re.match(r"Prize Group|Group \d|Date:|Singapore", c, re.I): break
-                        else: i += 1; continue
-                    if len(nums) >= 6:
-                        toto_draws.append({
-                            "draw": draw_no, "date": date_str,
-                            "numbers": sorted(nums[:6]),
-                            "additional": additional
-                        })
+                        else: i+=1; continue
+                    if len(nums)>=6:
+                        toto_draws.append({"draw":draw_no,"date":date_str,"numbers":sorted(nums[:6]),"additional":additional})
                 continue
         i += 1
 
     return toto_draws, fourd_draws
 
+def is_real_draw(draw):
+    """Filter out fake/sample data — real draws have proper date format DD-MM-YYYY"""
+    return bool(re.match(r"^\d{2}-\d{2}-\d{4}$", draw.get("date", "")))
 
 def merge(new_list, old_list, keep=30):
+    """Merge new draws into history, keeping only real data"""
+    # Only keep real data from old list (filter out 2025 fake sample data)
+    old_real = [d for d in old_list if is_real_draw(d)]
     new_draws = {d["draw"] for d in new_list}
-    combined  = new_list + [d for d in old_list if d["draw"] not in new_draws]
+    combined  = new_list + [d for d in old_real if d["draw"] not in new_draws]
     return combined[:keep]
-
 
 def main():
     print(f"Fetching {SOURCE_URL} ...")
-
     toto_draws = []
     fourd_draws = []
 
     try:
         html = fetch_html(SOURCE_URL)
         toto_draws, fourd_draws = parse_page(html)
-        print(f"  Parsed: {len(toto_draws)} TOTO draw(s), {len(fourd_draws)} 4D draw(s)")
+        print(f"  Parsed: {len(toto_draws)} TOTO, {len(fourd_draws)} 4D")
         if toto_draws:
             t = toto_draws[0]
             print(f"  Latest TOTO → Draw {t['draw']} | {t['date']} | {t['numbers']} + {t['additional']}")
@@ -147,10 +125,7 @@ def main():
             f = fourd_draws[0]
             print(f"  Latest 4D   → Draw {f['draw']} | {f['date']} | 1st={f['first']}")
     except Exception as e:
-        print(f"  Fetch/parse error: {e}")
-
-    if not toto_draws and not fourd_draws:
-        print("WARNING: Nothing parsed — page structure may have changed.")
+        print(f"  Error: {e}")
 
     # Load existing history
     existing = {"toto": [], "four_d": []}
@@ -175,8 +150,7 @@ def main():
     with open("data/results.json", "w") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
-    print(f"\nSaved → {len(merged_toto)} TOTO + {len(merged_fourd)} 4D draws in data/results.json")
-
+    print(f"Saved → {len(merged_toto)} TOTO + {len(merged_fourd)} 4D draws")
 
 if __name__ == "__main__":
     main()
