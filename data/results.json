@@ -1,7 +1,20 @@
 {
-  "last_updated": "2026-10-08 02:06:53 UTC",
+  "last_updated": "2026-10-09 02:20:39 UTC",
   "source": "check4d.org + Singapore Pools",
   "toto": [
+    {
+      "draw": "4224",
+      "date": "08-10-2026",
+      "numbers": [
+        9,
+        18,
+        24,
+        27,
+        31,
+        35
+      ],
+      "additional": 11
+    },
     {
       "draw": "4223",
       "date": "05-10-2026",
